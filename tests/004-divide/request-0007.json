@@ -1,0 +1,6 @@
+[
+  { "jsonrpc": "2.0", "method": "divide", "params": [8, 2], "id": 7 },
+  { "jsonrpc": "2.0", "method": "divide", "params": [3, 0] },
+  "this is invalid",
+  { "jsonrpc": "2.0", "method": "unknown", "id": 8 }
+]

@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "divide",
+  "params": [5],
+  "id": 4
+}
