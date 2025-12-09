@@ -2,7 +2,7 @@
 import os, json, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EX = 'exercise-001-intro'
+EX = '001-intro'
 TESTS_DIR = os.path.join(ROOT, 'tests', EX)
 SOLUTION = os.path.join(ROOT, 'solutions', EX, 'code', 'python', 'server.py')
 

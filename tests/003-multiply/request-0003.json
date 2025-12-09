@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "multiply",
+  "params": [0, 5, 10],
+  "id": 3
+}

@@ -118,7 +118,7 @@ def normalise(json_str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Language-agnostic test runner for top-level JSON fixtures')
-    parser.add_argument('--exercises', '-e', help='Comma-separated exercise directories to run (e.g. exercise-001-intro)', default=None)
+    parser.add_argument('--exercises', '-e', help='Comma-separated exercise directories to run (e.g. 001-intro)', default=None)
     parser.add_argument('--all', action='store_true', dest='run_all', help='Run all exercises, overriding --exercises and CI changed-exercise filtering')
     parser.add_argument('--host', help='Optional host to set as TEST_HOST env var', default=None)
     parser.add_argument('--port', help='Optional port to set as TEST_PORT env var', default=None)

@@ -54,6 +54,59 @@
 - metadata.json（任意）
 	- id, title, difficulty, topics (json-rpc, notifications, batch), estimated_time
 
+### Problem file requirements — `problem.md` / `problem.en.md` の必須項目
+
+新しい演習問題を追加する際、`problem.md`（日本語版）および `problem.en.md`（英語版）は下記の必須セクションを必ず含めてください。将来の整合性のために、このフォーマットをリポジトリ標準とします。
+
+必須セクション:
+- 日本語版（`problem.md`）: `要件`, `受け入れ条件`, `難易度` を必ず含めること。
+- 英語版（`problem.en.md`）: `Requirements`, `Acceptance criteria`, `Difficulty` を必ず含めること。
+
+目的: 明確な受け入れ基準を定義することで、自動テストやレビューが容易になり、解答実装の品質が保たれます。
+
+推奨フォーマット（テンプレート）:
+
+````markdown
+```markdown
+# <Exercise Number> — Short title
+
+Context:
+- Short description of the scenario and what the student should implement.
+
+Requirements:
+- Bullet list of functional requirements (what the implementation must do).
+
+Acceptance criteria:
+- Bullet list of concrete acceptance steps (how tests will verify correctness). Include details about input/output, error handling, and expected JSON-RPC behavior.
+
+Difficulty: ⭐ (or 1-5, or other scale)
+
+Examples:
+Request:
+```json
+{ ... }
+```
+
+Expected response:
+```json
+{ ... }
+```
+
+```
+````
+
+注意事項:
+- 見出しは上記と同等の意味であれば日本語/英語どちらでも構いませんが、CI やレビュワーが機械的に判別しやすいように英語版には必ず英語の見出し（`Requirements` / `Acceptance criteria` / `Difficulty`）を含めてください。
+- 受け入れ条件は曖昧な表現を避け、テストフィクスチャ（`tests/`）の形式に合わせて明確に書いてください（stdin/stdout、HTTP、通知の扱いなど）。
+- 将来的に自動チェックを追加する場合、この README の必須セクションを検証ルールとして利用できるように設計してください。
+
+
+多言語対応:
+- 各演習および解答は日本語と英語の両方の版を含めることを推奨します。
+- 日本語版のファイル名: `problem.md` （演習）および `solution.md` （解説）。
+- 英語版のファイル名: `problem.en.md` （演習, English）および `solution.en.md` （解説, English）。
+- CI やツールはこの命名規則を期待するため、新規追加時は両言語ファイルを用意してください（翻訳が未完の場合は一時的に原文をコピーしても構いません）。
+
 命名規則: `XXX-short-desc`（1-indexed、3桁のゼロ埋め）
 
 ---
@@ -85,7 +138,7 @@
 ./scripts/run-tests.sh
 
 追加オプション:
-- `--exercises` / `-e` : コンマ区切りで実行する演習を指定（例: `exercise-001-intro,exercise-002-...`）
+- `--exercises` / `-e` : コンマ区切りで実行する演習を指定（例: `001-intro,002-...`）
 - `--host` : テスト内で参照されるホスト名（ソリューションは `TEST_HOST` 環境変数で受け取れます）
 - `--port` : テスト内で参照されるポート番号（ソリューションは `TEST_PORT` 環境変数で受け取れます）
  - `--all` : すべての演習を強制実行（`--exercises` の指定や CI の差分検出を上書き）
@@ -96,7 +149,7 @@
 ./scripts/run-tests.sh
 
 # 複数演習を指定して実行
-./scripts/run-tests.sh --exercises exercise-001-intro,exercise-002-foo
+./scripts/run-tests.sh --exercises 001-intro,002-foo
 
 # ホスト/ポートと合わせて実行
 # - テスト実行時に `--host`/`--port` を指定すると、Python サンプル実装が `--http` オプションで起動された場合は自動でサーバを起動してテストを実行します。
@@ -118,7 +171,7 @@ CI (GitHub Actions):
 ---
 
 ## Contributing ✍️
-- 新しい演習を追加する際は、`exercises/` に `exercise-XXX` ディレクトリを作り、`problem.md` と `tests/` を提供してください。`metadata.json` を付けると管理しやすくなります。
+- 新しい演習を追加する際は、`exercises/` に `XXX` ディレクトリを作り、`problem.md` と `tests/` を提供してください。`metadata.json` を付けると管理しやすくなります。
 - 解答は `solutions/` 以下に配置し、`problem.md` に書かれた受け入れ基準を満たすコード・解説を含めてください。
 
 PR のテンプレート案（`.github/pull_request_template.md`）:

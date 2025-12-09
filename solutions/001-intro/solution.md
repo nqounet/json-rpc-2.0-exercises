@@ -1,4 +1,4 @@
-# Solution: exercise-001-intro
+# Solution: 001-intro
 
 概要:
 

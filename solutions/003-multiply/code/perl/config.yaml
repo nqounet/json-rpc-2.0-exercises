@@ -1,0 +1,11 @@
+language: perl
+command: 
+  - plackup
+  - --host
+  - 127.0.0.1
+  - --port
+  - 8080
+  - --app
+  - solutions/003-multiply/code/perl/app.psgi
+host: 127.0.0.1
+port: 8080

@@ -17,9 +17,9 @@ while IFS= read -r line; do
   # Normalize path
   case "$line" in
     exercises/*|tests/*|solutions/*)
-      # Extract the exercise directory name (e.g. exercises/exercise-001-intro/...)
-      # We want exercise-001-intro
-      # For path like tests/exercise-001-intro/request-0001.json -> exercise-001-intro
+      # Extract the exercise directory name (e.g. exercises/001-intro/...)
+      # We want 001-intro
+      # For path like tests/001-intro/request-0001.json -> 001-intro
       EX=$(echo "$line" | cut -d'/' -f2)
       if [[ ! " ${EXERCISES[*]} " =~ " ${EX} " ]]; then
         EXERCISES+=("$EX")
