@@ -15,6 +15,12 @@ import sys
 import time
 import urllib.request
 import urllib.error
+import shlex
+try:
+    import yaml
+except Exception:
+    print('PyYAML is required for reading config.yaml. Install with: pip3 install pyyaml')
+    sys.exit(1)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TESTS_DIR = os.path.join(ROOT, 'tests')
@@ -91,6 +97,9 @@ def run_solution_perl_server(path, host, port, env=None):
     return 0, proc, None
 
 
+# Using PyYAML (`yaml.safe_load`) for config parsing (see top-level import)
+
+
 def post_to_server(host, port, req_json):
     url = f'http://{host}:{port}/'
     req = urllib.request.Request(url, data=req_json.encode('utf-8'), method='POST', headers={'Content-Type': 'application/json'})
@@ -154,16 +163,75 @@ if __name__ == '__main__':
             python_solution = find_python_solution(exercise)
         elif args.lang == 'perl':
             perl_solution = find_perl_solution(exercise)
+        # cfg may be populated from config.yaml below; initialise empty for checks
+        cfg = {}
+        # If there's no implementation for the chosen language and no configured command, skip tests
         if args.lang == 'python' and python_solution is None:
-            print(f'  No Python solution found for {exercise}; marking {len(request_files)} test(s) as failed')
-            for req_file in request_files:
-                total += 1
-                print(f'  {req_file} -> MISSING-SOLUTION')
-            continue
+            # we'll check config.yaml later; temporarily continue to config loading
+            pass
 
-        # If host/port provided and a solution exists for selected language, try to start it as an HTTP server
+        # Prepare for optional server process (either started by this runner or by a configured command)
         server_proc = None
         server_started = False
+
+        # If a `config.yaml` exists under the solution code directory, read it and
+        # use its `host`/`port` values and (optionally) `command` to start the service.
+        config_path = os.path.join(SOLUTIONS_DIR, exercise, 'code', args.lang, 'config.yaml')
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as fh:
+                    cfg = yaml.safe_load(fh) or {}
+            except Exception as e:
+                print(f'  Failed to parse config.yaml for {exercise}: {e}')
+                cfg = {}
+
+            # If host/port present in config and not provided on CLI, adopt them
+            if not args.host and 'host' in cfg:
+                args.host = str(cfg['host'])
+            if not args.port and 'port' in cfg:
+                args.port = str(cfg['port'])
+
+            # If a command is specified in config, attempt to start it and wait for readiness
+            if 'command' in cfg:
+                if not args.host or not args.port:
+                    print('  config.yaml contains `command` but `host`/`port` are not set; skipping configured command')
+                else:
+                    if isinstance(cfg['command'], list):
+                        cmd = list(cfg['command'])
+                    else:
+                        cmd = shlex.split(cfg['command'])
+                    # Ensure all command parts are strings (PyYAML may parse numbers)
+                    cmd = [str(x) for x in cmd]
+                    # Append host and port as positional args for the command
+                    cmd.append(str(args.host))
+                    cmd.append(str(args.port))
+                    print(f'  Starting configured command for {exercise}: {" ".join(cmd)}')
+                    try:
+                        env = os.environ.copy()
+                        env['TEST_HOST'] = args.host
+                        env['TEST_PORT'] = str(args.port)
+                        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+                        # Wait for server to be ready (try to connect)
+                        url = f'http://{args.host}:{args.port}/'
+                        ready = False
+                        for i in range(20):
+                            try:
+                                req = urllib.request.Request(url, data=b'{}', method='POST', headers={'Content-Type': 'application/json'})
+                                with urllib.request.urlopen(req, timeout=1) as resp:
+                                    ready = True
+                                    break
+                            except Exception:
+                                time.sleep(0.2)
+                        if not ready:
+                            stderr = proc.stderr.read() if proc.stderr else ''
+                            proc.terminate()
+                            proc.wait()
+                            print(f'  Failed to start configured command for {exercise}: {stderr}')
+                        else:
+                            server_proc = proc
+                            server_started = True
+                    except Exception as e:
+                        print(f'  Exception starting configured command for {exercise}: {e}')
         if args.host and args.port and ((args.lang == 'python' and python_solution) or (args.lang == 'perl' and perl_solution)):
             env = os.environ.copy()
             if args.host:
@@ -180,6 +248,41 @@ if __name__ == '__main__':
             else:
                 server_proc = proc
                 server_started = True
+
+        # Now that config.yaml (if any) is loaded into `cfg`, if there's still no implementation
+        # and no configured command, mark tests as missing and skip this exercise.
+        has_command = bool(cfg.get('command'))
+        if args.lang == 'python' and not python_solution and not has_command:
+            print(f'  No Python solution found for {exercise}; marking {len(request_files)} test(s) as failed')
+            for req_file in request_files:
+                total += 1
+                print(f'  {req_file} -> MISSING-SOLUTION')
+            # ensure any started server is cleaned up
+            if server_proc:
+                try:
+                    server_proc.terminate()
+                    server_proc.wait(timeout=5)
+                except Exception:
+                    try:
+                        server_proc.kill()
+                    except Exception:
+                        pass
+            continue
+        if args.lang == 'perl' and not perl_solution and not has_command:
+            print(f'  No Perl solution found for {exercise}; marking {len(request_files)} test(s) as failed')
+            for req_file in request_files:
+                total += 1
+                print(f'  {req_file} -> MISSING-SOLUTION')
+            if server_proc:
+                try:
+                    server_proc.terminate()
+                    server_proc.wait(timeout=5)
+                except Exception:
+                    try:
+                        server_proc.kill()
+                    except Exception:
+                        pass
+            continue
 
         try:
             for req_file in request_files:

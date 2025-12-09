@@ -15,6 +15,3 @@
 依存性: 標準ライブラリのみ
 
 参考: JSON-RPC 2.0 仕様 — https://www.jsonrpc.org/specification
-
-別言語:
-- Perl 実装: `solutions/exercise-001-intro/code/perl/server.pl`（stdin/stdout と --http モードをサポート）

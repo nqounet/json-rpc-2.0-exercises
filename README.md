@@ -60,7 +60,7 @@
 
 ## 解答 (solutions) の取り扱い ⚖️
 - 本リポジトリでは、**解答 (solutions) は main ブランチに含める** 方針です（公開型学習リポジトリを想定）。
-- 各演習の解答は `solutions/<exercise>/` に配置し、言語ごとの実装例は `solutions/<exercise>/code/<lang>/` に格納します。
+- 各演習の解答は `solutions/<exercise>/` に配置し、言語ごとの実装例は `solutions/<exercise>/code/<language>/` に格納します。
 
 重要: この方針は公開学習向けに最適化したもので、もしコンテスト/課題形式で正答を隠す必要があるなら、別ブランチ・プライベートリポジトリを検討してください。
 
