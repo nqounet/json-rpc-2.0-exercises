@@ -18,22 +18,25 @@
 
 ---
 
-## 推奨ディレクトリ構成 (提案) 📁
+## ディレクトリ構成 📁
 
 ```
 .
 ├── exercises/                # 演習問題（解く対象）
-│   ├── exercise-001-intro/
+│   ├── 001-intro/
 │   │   ├── problem.md        # 問題説明・受け入れ基準(acceptance criteria)
 │   │   └── hints.md          # ヒント（任意）
-│   └── exercise-002-.../
+│   └── 002-.../
 ├── solutions/                # 各演習に対する模範解答（言語別サブフォルダ）
-│   ├── exercise-001-intro/
+│   ├── 001-intro/
 │   │   ├── solution.md       # 解説 / 実装方針
 │   │   └── code/             # 言語別の実装例（python/, js/, go/ など）
+│   └── 002-.../
 ├── examples/                 # 最小実装のサーバ / クライアント例
 ├── spec/                     # 参照資料（JSON-RPC 2.0 の軽量まとめ or リンク）
 ├── tests/                    # 言語非依存のテスト資産 (request/expected fixtures), top-level に配置
+│   ├── 001-intro/
+│   └── 002-.../
 ├── tools/                    # ビルド・テスト・ハーネス（例: test-runner）
 ├── docs/                     # 使い方、学習ロードマップ、FAQ
 ├── scripts/                  # CI / ローカル実行用スクリプト
@@ -42,18 +45,16 @@
 
 ---
 
-## 演習 (exercises) のフォーマット案 💡
+## 演習 (exercises) のフォーマット 💡
 - problem.md
 	- 説明 (context)、要求 (what to implement)、受け入れ条件 (acceptance criteria)
 	- 入出力の例（リクエストと期待されるレスポンス）
-- tests/
-	- JSON 形式の fixtures や統合テスト（ex: request/expected_response）
 - hints.md（任意）
 	- 難易度や部分的なヒント
 - metadata.json（任意）
 	- id, title, difficulty, topics (json-rpc, notifications, batch), estimated_time
 
-命名規則: `exercise-XXX-short-desc`（1-indexed、3桁のゼロ埋め）
+命名規則: `XXX-short-desc`（1-indexed、3桁のゼロ埋め）
 
 ---
 

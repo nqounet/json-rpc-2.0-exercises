@@ -26,6 +26,11 @@ def find_python_solution(exercise_name):
     return path if os.path.exists(path) else None
 
 
+def find_perl_solution(exercise_name):
+    path = os.path.join(SOLUTIONS_DIR, exercise_name, 'code', 'perl', 'server.pl')
+    return path if os.path.exists(path) else None
+
+
 def run_solution_python(path, req_json, env=None):
     cmd = [sys.executable, path]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
@@ -33,8 +38,38 @@ def run_solution_python(path, req_json, env=None):
     return proc.returncode, stdout, stderr
 
 
+def run_solution_perl(path, req_json, env=None):
+    cmd = ['perl', path]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+    stdout, stderr = proc.communicate(req_json)
+    return proc.returncode, stdout, stderr
+
+
 def run_solution_python_server(path, host, port, env=None):
     cmd = [sys.executable, path, '--http']
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+    # Wait for server to be ready (try to connect)
+    url = f'http://{host}:{port}/'
+    ready = False
+    for i in range(20):
+        try:
+            req = urllib.request.Request(url, data=b'{}', method='POST', headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=1) as resp:
+                ready = True
+                break
+        except Exception:
+            time.sleep(0.2)
+    if not ready:
+        # Failed to start server
+        stderr = proc.stderr.read() if proc.stderr else ''
+        proc.terminate()
+        proc.wait()
+        return 1, '', f'Server did not start: {stderr}'
+    return 0, proc, None
+
+
+def run_solution_perl_server(path, host, port, env=None):
+    cmd = ['perl', path, '--http']
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
     # Wait for server to be ready (try to connect)
     url = f'http://{host}:{port}/'
@@ -114,27 +149,32 @@ if __name__ == '__main__':
             continue
         # Find solution based on selected language
         python_solution = None
+        perl_solution = None
         if args.lang == 'python':
             python_solution = find_python_solution(exercise)
-        # (Future) check other languages here
-        if python_solution is None:
+        elif args.lang == 'perl':
+            perl_solution = find_perl_solution(exercise)
+        if args.lang == 'python' and python_solution is None:
             print(f'  No Python solution found for {exercise}; marking {len(request_files)} test(s) as failed')
             for req_file in request_files:
                 total += 1
                 print(f'  {req_file} -> MISSING-SOLUTION')
             continue
 
-        # If host/port provided and a python solution exists, try to start it as an HTTP server
+        # If host/port provided and a solution exists for selected language, try to start it as an HTTP server
         server_proc = None
         server_started = False
-        if args.host and args.port and python_solution:
+        if args.host and args.port and ((args.lang == 'python' and python_solution) or (args.lang == 'perl' and perl_solution)):
             env = os.environ.copy()
             if args.host:
                 env['TEST_HOST'] = args.host
             if args.port:
                 env['TEST_PORT'] = args.port
             print(f'  Starting server for {exercise} at {args.host}:{args.port} ...')
-            rc, proc, err = run_solution_python_server(python_solution, args.host, args.port, env=env)
+            if args.lang == 'python':
+                rc, proc, err = run_solution_python_server(python_solution, args.host, args.port, env=env)
+            elif args.lang == 'perl':
+                rc, proc, err = run_solution_perl_server(perl_solution, args.host, args.port, env=env)
             if rc != 0:
                 print(f'  Failed to start server for {exercise}: {err}')
             else:
@@ -167,7 +207,10 @@ if __name__ == '__main__':
                 if server_started:
                     code, stdout, stderr = post_to_server(args.host, args.port, req_json)
                 else:
-                    code, stdout, stderr = run_solution_python(python_solution, req_json, env=env)
+                    if args.lang == 'python':
+                        code, stdout, stderr = run_solution_python(python_solution, req_json, env=env)
+                    elif args.lang == 'perl':
+                        code, stdout, stderr = run_solution_perl(perl_solution, req_json, env=env)
                 if stderr and stderr.strip():
                     print(f'  STDERR: {stderr.strip()}')
 

@@ -1,6 +1,13 @@
 # Ignore compiled output and temporary binary files
 *.out
 
+# Keep
+!.gitignore
+
+# temporary files
+/tmp/*
+!/tmp/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]
