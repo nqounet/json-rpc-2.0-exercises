@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -18,6 +20,24 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/run-tests.sh
-      - name: Run tests
+      - name: Detect changed exercises
+        id: changed
         run: |
-          ./scripts/run-tests.sh
+          chmod +x scripts/ci-find-changed-exercises.sh
+          BASE_REF=origin/main
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.event.pull_request.base.ref }}"
+          fi
+          CHANGED=$(./scripts/ci-find-changed-exercises.sh "$BASE_REF")
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Run tests (changed exercises only)
+        run: |
+          chmod +x scripts/run-tests.sh
+          if [ -z "${{ steps.changed.outputs.changed }}" ]; then
+            echo "No changed exercise detected; running all tests"
+            ./scripts/run-tests.sh
+          else
+            echo "Running tests for: ${{ steps.changed.outputs.changed }}"
+            ./scripts/run-tests.sh --exercises ${{ steps.changed.outputs.changed }}
+          fi

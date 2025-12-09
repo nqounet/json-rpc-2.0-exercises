@@ -83,6 +83,24 @@
 # 言語非依存なテストをルートの fixtures で実行
 ./scripts/run-tests.sh
 
+追加オプション:
+- `--exercises` / `-e` : コンマ区切りで実行する演習を指定（例: `exercise-001-intro,exercise-002-...`）
+- `--host` : テスト内で参照されるホスト名（ソリューションは `TEST_HOST` 環境変数で受け取れます）
+- `--port` : テスト内で参照されるポート番号（ソリューションは `TEST_PORT` 環境変数で受け取れます）
+
+例:
+```bash
+# 全テスト（デフォルト）
+./scripts/run-tests.sh
+
+# 複数演習を指定して実行
+./scripts/run-tests.sh --exercises exercise-001-intro,exercise-002-foo
+
+# ホスト/ポートと合わせて実行
+# - テスト実行時に `--host`/`--port` を指定すると、Python サンプル実装が `--http` オプションで起動された場合は自動でサーバを起動してテストを実行します。
+./scripts/run-tests.sh --host 127.0.0.1 --port 8080
+```
+
 ローカル実行例:
 ```bash
 chmod +x ./scripts/run-tests.sh
@@ -91,6 +109,8 @@ chmod +x ./scripts/run-tests.sh
 
 CI (GitHub Actions):
 - GitHub Actions workflow は `.github/workflows/ci.yml` に定義されており、`push` / `pull_request`（main ブランチ）イベントで `scripts/run-tests.sh` を実行します。
+ - GitHub Actions workflow は `.github/workflows/ci.yml` に定義されており、`push` / `pull_request`（main ブランチ）イベントで `scripts/run-tests.sh` を実行します。
+ - CI は差分のある演習のみを検出し、変化のあった `exercises/*`・`solutions/*`・`tests/*` の変更に基づいて、対応する演習だけを実行するように最適化されています。
 ```
 
 ---
