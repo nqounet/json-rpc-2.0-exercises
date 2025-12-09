@@ -75,6 +75,7 @@ def normalise(json_str):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Language-agnostic test runner for top-level JSON fixtures')
     parser.add_argument('--exercises', '-e', help='Comma-separated exercise directories to run (e.g. exercise-001-intro)', default=None)
+    parser.add_argument('--all', action='store_true', dest='run_all', help='Run all exercises, overriding --exercises and CI changed-exercise filtering')
     parser.add_argument('--host', help='Optional host to set as TEST_HOST env var', default=None)
     parser.add_argument('--port', help='Optional port to set as TEST_PORT env var', default=None)
     parser.add_argument('--lang', help='Language to use for solutions (default: python)', default='python')
@@ -84,9 +85,12 @@ if __name__ == '__main__':
         print('No tests directory found at: ' + TESTS_DIR)
         sys.exit(1)
 
-    requested_exercises = []
+    # requested_exercises == None means run everything
+    requested_exercises = None
     if args.exercises:
         requested_exercises = [x.strip() for x in args.exercises.split(',') if x.strip()]
+    if args.run_all:
+        requested_exercises = None
 
     total, passed = 0, 0
     for exercise in sorted(os.listdir(TESTS_DIR)):
@@ -101,7 +105,7 @@ if __name__ == '__main__':
         print(f'Running tests for exercise: {exercise}')
 
         # Locate solution
-        if requested_exercises and exercise not in requested_exercises:
+        if requested_exercises is not None and exercise not in requested_exercises:
             continue
         # Find solution based on selected language
         python_solution = None
@@ -109,7 +113,10 @@ if __name__ == '__main__':
             python_solution = find_python_solution(exercise)
         # (Future) check other languages here
         if python_solution is None:
-            print(f'  No Python solution found for {exercise}; skipping (add solutions/{exercise}/code/python/server.py)')
+            print(f'  No Python solution found for {exercise}; marking {len(request_files)} test(s) as failed')
+            for req_file in request_files:
+                total += 1
+                print(f'  {req_file} -> MISSING-SOLUTION')
             continue
 
         # If host/port provided and a python solution exists, try to start it as an HTTP server
@@ -132,49 +139,49 @@ if __name__ == '__main__':
         try:
             for req_file in request_files:
                 idx = req_file.split('request-')[-1].split('.json')[0]
-            expected_file = f'expected-{idx}.json'
-            req_path = os.path.join(exercise_tests_dir, req_file)
-            expected_path = os.path.join(exercise_tests_dir, expected_file)
+                expected_file = f'expected-{idx}.json'
+                req_path = os.path.join(exercise_tests_dir, req_file)
+                expected_path = os.path.join(exercise_tests_dir, expected_file)
 
-            if not os.path.exists(expected_path):
-                print('  Skipping test ' + req_path + ', missing expected file: ' + expected_path)
-                continue
+                if not os.path.exists(expected_path):
+                    print('  Skipping test ' + req_path + ', missing expected file: ' + expected_path)
+                    continue
 
-            with open(req_path, 'r') as fh:
-                req_json = fh.read()
-            with open(expected_path, 'r') as fh:
-                expected_json = fh.read()
+                with open(req_path, 'r') as fh:
+                    req_json = fh.read()
+                with open(expected_path, 'r') as fh:
+                    expected_json = fh.read()
 
-            total += 1
-            # Prepare environment
-            env = os.environ.copy()
-            if args.host:
-                env['TEST_HOST'] = args.host
-            if args.port:
-                env['TEST_PORT'] = args.port
-            if server_started:
-                code, stdout, stderr = post_to_server(args.host, args.port, req_json)
-            else:
-                code, stdout, stderr = run_solution_python(python_solution, req_json, env=env)
-            if stderr and stderr.strip():
-                print(f'  STDERR: {stderr.strip()}')
+                total += 1
+                # Prepare environment
+                env = os.environ.copy()
+                if args.host:
+                    env['TEST_HOST'] = args.host
+                if args.port:
+                    env['TEST_PORT'] = args.port
+                if server_started:
+                    code, stdout, stderr = post_to_server(args.host, args.port, req_json)
+                else:
+                    code, stdout, stderr = run_solution_python(python_solution, req_json, env=env)
+                if stderr and stderr.strip():
+                    print(f'  STDERR: {stderr.strip()}')
 
-            if stdout.strip() == '':
-                # Notification maybe => expected may be empty
-                out_obj = ''
-            else:
-                out_obj = normalise(stdout)
+                if stdout.strip() == '':
+                    # Notification maybe => expected may be empty
+                    out_obj = ''
+                else:
+                    out_obj = normalise(stdout)
 
-            expected_obj = normalise(expected_json)
+                expected_obj = normalise(expected_json)
 
-            ok = out_obj == expected_obj
-            result = 'OK' if ok else 'FAIL'
-            print(f'  {req_file} -> {result}')
-            if not ok:
-                print('   expected:', json.dumps(expected_obj, separators=(",", ":")))
-                print('   got:     ', json.dumps(out_obj, separators=(",", ":")) if isinstance(out_obj, (dict, list)) else out_obj)
-            else:
-                passed += 1
+                ok = out_obj == expected_obj
+                result = 'OK' if ok else 'FAIL'
+                print(f'  {req_file} -> {result}')
+                if not ok:
+                    print('   expected:', json.dumps(expected_obj, separators=(",", ":")))
+                    print('   got:     ', json.dumps(out_obj, separators=(",", ":")) if isinstance(out_obj, (dict, list)) else out_obj)
+                else:
+                    passed += 1
         finally:
             if server_proc:
                 try:

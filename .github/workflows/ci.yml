@@ -5,6 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      run_all:
+        description: 'Force running all tests (skips changed-only optimization)'
+        required: false
+        default: 'false'
 
 jobs:
   test:
@@ -31,10 +37,15 @@ jobs:
           CHANGED=$(./scripts/ci-find-changed-exercises.sh "$BASE_REF")
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
-      - name: Run tests (changed exercises only)
+      - name: Run tests
+        env:
+          RUN_ALL: ${{ github.event.inputs.run_all || 'false' }}
         run: |
           chmod +x scripts/run-tests.sh
-          if [ -z "${{ steps.changed.outputs.changed }}" ]; then
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "RUN_ALL is true; running all tests"
+            ./scripts/run-tests.sh --all
+          elif [ -z "${{ steps.changed.outputs.changed }}" ]; then
             echo "No changed exercise detected; running all tests"
             ./scripts/run-tests.sh
           else
