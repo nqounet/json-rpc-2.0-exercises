@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32602,
+    "message": "Invalid params: minuend and subtrahend must be numbers"
+  },
+  "id": 5
+}

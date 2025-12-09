@@ -102,6 +102,11 @@ if __name__ == '__main__':
         if not request_files:
             continue
 
+        # If the user specified --exercises/-e, skip non-selected exercises. Only show the
+        # 'Running tests' message for exercises that will actually be executed.
+        if requested_exercises is not None and exercise not in requested_exercises:
+            continue
+
         print(f'Running tests for exercise: {exercise}')
 
         # Locate solution

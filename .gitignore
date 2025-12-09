@@ -1,0 +1,10 @@
+# Ignore compiled output and temporary binary files
+*.out
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# macOS
+.DS_Store

@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 """
-Minimal JSON-RPC 2.0 implementation for the `sum` method.
-- Reads a single JSON-RPC request from stdin
-- Writes a single JSON-RPC response to stdout (if request has an id)
-
-Note: This is intentionally minimal for demonstration and testing.
+Minimal JSON-RPC 2.0 implementation for the `subtract` method.
+- Supports positional params ([minuend, subtrahend]) and named params ({minuend, subtrahend})
+- Mirrors error behaviors from the reference 'sum' example
 """
 import sys
 import json
 import argparse
 import os
-import time
-import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -25,8 +21,28 @@ def make_error(id_, code, message, data=None):
     return resp
 
 
+def is_number(x):
+    try:
+        # Accept ints and floats
+        return isinstance(x, (int, float)) or (isinstance(x, str) and x.replace('.', '', 1).isdigit())
+    except Exception:
+        return False
+
+
+def to_number(x):
+    if isinstance(x, int):
+        return x
+    if isinstance(x, float):
+        return x
+    if isinstance(x, str):
+        # Try to parse numeric string
+        if '.' in x:
+            return float(x)
+        return int(x)
+    raise ValueError('Not a number')
+
+
 def handle_request(req):
-    # Basic validation
     if not isinstance(req, dict):
         return make_error(None, -32600, "Invalid Request")
 
@@ -37,22 +53,36 @@ def handle_request(req):
     if not isinstance(method, str):
         return make_error(req.get("id"), -32600, "Invalid Request: method must be a string")
 
-    # Handle 'sum' method
-    if method == "sum":
+    if method == "subtract":
         params = req.get("params", [])
-        if not isinstance(params, list):
+        # Handle positional
+        if isinstance(params, list):
+            if len(params) < 2:
+                return make_error(req.get("id"), -32602, "Invalid params: expected two numbers")
+            try:
+                a = to_number(params[0])
+                b = to_number(params[1])
+            except Exception:
+                return make_error(req.get("id"), -32602, "Invalid params: minuend and subtrahend must be numbers")
+            result = a - b
+        elif isinstance(params, dict):
+            try:
+                a = to_number(params.get("minuend"))
+                b = to_number(params.get("subtrahend"))
+            except Exception:
+                return make_error(req.get("id"), -32602, "Invalid params: minuend and subtrahend must be numbers")
+            result = a - b
+        else:
             return make_error(req.get("id"), -32602, "Invalid params")
-        try:
-            total = sum([float(x) for x in params])
-            # If all inputs are ints, result should be int
-            if all(isinstance(x, int) for x in params):
-                total = int(total)
-        except Exception:
-            return make_error(req.get("id"), -32602, "Invalid params: items must be numbers")
+
         if "id" not in req:
             # Notification — no response
             return None
-        return {"jsonrpc": "2.0", "result": total, "id": req.get("id")}
+
+        # Convert to int if both numbers are staunch ints
+        if isinstance(result, float) and result.is_integer():
+            result = int(result)
+        return {"jsonrpc": "2.0", "result": result, "id": req.get("id")}
 
     return make_error(req.get("id"), -32601, "Method not found")
 
@@ -65,7 +95,6 @@ def serve_http(host, port):
             try:
                 req = json.loads(body)
             except Exception:
-                # JSON-RPC spec: Parse error responses MUST include an "id" set to null
                 resp = make_error(None, -32700, 'Parse error')
                 resp['id'] = None
                 resp_bytes = json.dumps(resp, separators=(',', ':')).encode('utf-8')
@@ -77,7 +106,6 @@ def serve_http(host, port):
                 return
             resp = handle_request(req)
             if resp is None:
-                # Notification -- empty response
                 self.send_response(204)
                 self.end_headers()
                 return
@@ -100,19 +128,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--http', action='store_true', help='Run as a simple HTTP JSON-RPC server (listen on TEST_HOST/TEST_PORT env vars or defaults)')
     args = parser.parse_args()
-    # If HTTP serve mode, use env vars TEST_HOST/TEST_PORT or defaults
     if args.http:
         host = os.environ.get('TEST_HOST', '127.0.0.1')
         port = os.environ.get('TEST_PORT', '4000')
         serve_http(host, port)
         sys.exit(0)
 
-    # Read stdin fully
     raw = sys.stdin.read()
     try:
         req = json.loads(raw)
     except Exception:
-        # JSON-RPC spec: Parse error responses MUST include an "id" set to null
         resp = make_error(None, -32700, "Parse error")
         resp['id'] = None
         print(json.dumps(resp, separators=(',', ':')))
@@ -120,6 +145,5 @@ if __name__ == "__main__":
 
     resp = handle_request(req)
     if resp is None:
-        # notification — write nothing and exit
         sys.exit(0)
     print(json.dumps(resp, separators=(',', ':')))
