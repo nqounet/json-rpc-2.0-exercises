@@ -26,6 +26,10 @@ jobs:
       - name: Make scripts executable
         run: |
           chmod +x scripts/run-tests.sh
+      - name: Install dependencies # 依存関係をインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
       - name: Detect changed exercises
         id: changed
         run: |
