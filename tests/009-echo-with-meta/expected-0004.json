@@ -1,0 +1,5 @@
+[
+  { "jsonrpc": "2.0", "result": { "payload": "x", "meta": { "user": "bob", "timestamp": "2020-01-01T12:00:00Z" } }, "id": 4 },
+  { "jsonrpc": "2.0", "error": { "code": -32600, "message": "Invalid Request" }, "id": null },
+  { "jsonrpc": "2.0", "error": { "code": -32601, "message": "Method not found" }, "id": 8 }
+]

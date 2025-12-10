@@ -1,0 +1,6 @@
+[
+  { "jsonrpc": "2.0", "method": "fibStream", "params": { "start": 0, "count": 3 }, "id": 5 },
+  { "jsonrpc": "2.0", "method": "fibStream", "params": { "start": 1, "count": 2 } },
+  "this is invalid",
+  { "jsonrpc": "2.0", "method": "unknown", "id": 8 }
+]

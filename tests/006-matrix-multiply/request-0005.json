@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "matmul",
+  "params": { "a": [], "b": [[1]] },
+  "id": 5
+}

@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "mergeObjects",
+  "params": { "items": [{"a":1,"b":{"x":1}},{"b":{"x":2,"y":3},"c":4}], "strategy": "last" },
+  "id": 2
+}

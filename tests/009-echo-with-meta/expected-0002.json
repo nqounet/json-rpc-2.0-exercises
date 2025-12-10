@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "payload": "hello",
+    "meta": { "tags": ["a"], "timestamp": "2020-01-01T12:00:00Z" }
+  },
+  "id": 2
+}

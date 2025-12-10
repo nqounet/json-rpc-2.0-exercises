@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "primeFactors",
+  "params": [15, 21],
+  "id": 2
+}

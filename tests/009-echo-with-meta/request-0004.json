@@ -1,0 +1,6 @@
+[
+  { "jsonrpc": "2.0", "method": "echoWithMeta", "params": { "payload": "x", "meta": {"user":"bob","_s":"s"} }, "id": 4 },
+  { "jsonrpc": "2.0", "method": "echoWithMeta", "params": { "payload": "y" } },
+  "this is invalid",
+  { "jsonrpc": "2.0", "method": "unknown", "id": 8 }
+]

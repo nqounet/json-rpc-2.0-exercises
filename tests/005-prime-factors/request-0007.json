@@ -1,0 +1,6 @@
+[
+  { "jsonrpc": "2.0", "method": "primeFactors", "params": [2,3], "id": 7 },
+  { "jsonrpc": "2.0", "method": "primeFactors", "params": 11 },
+  "this is invalid",
+  { "jsonrpc": "2.0", "method": "unknown", "id": 8 }
+]

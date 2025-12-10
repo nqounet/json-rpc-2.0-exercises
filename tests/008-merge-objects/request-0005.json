@@ -1,0 +1,6 @@
+[
+  { "jsonrpc": "2.0", "method": "mergeObjects", "params": { "items": [{"a":1},{"a":2}] }, "id": 5 },
+  { "jsonrpc": "2.0", "method": "mergeObjects", "params": { "items": [{"x":1}] } },
+  "this is invalid",
+  { "jsonrpc": "2.0", "method": "unknown", "id": 8 }
+]

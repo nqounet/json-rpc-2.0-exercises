@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "echoWithMeta",
+  "params": { "payload": { "x": 1 }, "meta": { "user": "alice", "_token": "secret" } },
+  "id": 1
+}

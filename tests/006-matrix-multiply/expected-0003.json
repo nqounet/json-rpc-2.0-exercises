@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32602,
+    "message": "Invalid params: matrices must be numeric and dimensions must match"
+  },
+  "id": 3
+}

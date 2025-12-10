@@ -1,0 +1,6 @@
+{
+  "jsonrpc": "2.0",
+  "method": "fibStream",
+  "params": { "start": "one", "count": 3 },
+  "id": 4
+}
