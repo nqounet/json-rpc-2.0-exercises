@@ -48,6 +48,8 @@
 ## 演習 (exercises) のフォーマット 💡
 - problem.md
 	- 説明 (context)、要求 (what to implement)、受け入れ条件 (acceptance criteria)
+
+Note: Individual exercises may define their own numeric constraints or limits. For example, `exercises/005-prime-factors/problem.md` uses a maximum allowed value of `2^32 - 1` (`4294967295`).
 	- 入出力の例（リクエストと期待されるレスポンス）
 - hints.md（任意）
 	- 難易度や部分的なヒント

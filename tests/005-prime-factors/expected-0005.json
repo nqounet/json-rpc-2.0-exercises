@@ -2,7 +2,7 @@
   "jsonrpc": "2.0",
   "error": {
     "code": -32602,
-    "message": "Invalid params: items must be integers >= 2"
+    "message": "Invalid params: items must be integers >= 2 and <= 4294967295"
   },
   "id": 5
 }

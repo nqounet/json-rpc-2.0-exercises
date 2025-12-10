@@ -174,6 +174,12 @@ if __name__ == '__main__':
         server_proc = None
         server_started = False
 
+        # Per-exercise local host/port variables. Do not mutate `args` so CLI
+        # values remain constant across exercises; allow config.yaml to override
+        # these local variables for the current exercise only.
+        host = args.host
+        port = args.port
+
         # If a `config.yaml` exists under the solution code directory, read it and
         # use its `host`/`port` values and (optionally) `command` to start the service.
         config_path = os.path.join(SOLUTIONS_DIR, exercise, 'code', args.lang, 'config.yaml')
@@ -186,15 +192,18 @@ if __name__ == '__main__':
                 cfg = {}
 
             # If host/port present in config and not provided on CLI, adopt them
-            if not args.host and 'host' in cfg:
-                args.host = str(cfg['host'])
-            if not args.port and 'port' in cfg:
-                args.port = str(cfg['port'])
+            if not host and 'host' in cfg:
+                host = str(cfg['host'])
+            if not port and 'port' in cfg:
+                port = str(cfg['port'])
 
             # If a command is specified in config, attempt to start it and wait for readiness
             if 'command' in cfg:
-                if not args.host or not args.port:
+                # Only attempt to run the configured command if we have host/port
+                if not host or not port:
                     print('  config.yaml contains `command` but `host`/`port` are not set; skipping configured command')
+                    # Treat as if there's no usable command so later logic marks missing solutions correctly
+                    cfg.pop('command', None)
                 else:
                     if isinstance(cfg['command'], list):
                         cmd = list(cfg['command'])
@@ -203,16 +212,16 @@ if __name__ == '__main__':
                     # Ensure all command parts are strings (PyYAML may parse numbers)
                     cmd = [str(x) for x in cmd]
                     # Append host and port as positional args for the command
-                    cmd.append(str(args.host))
-                    cmd.append(str(args.port))
+                    cmd.append(str(host))
+                    cmd.append(str(port))
                     print(f'  Starting configured command for {exercise}: {" ".join(cmd)}')
                     try:
                         env = os.environ.copy()
-                        env['TEST_HOST'] = args.host
-                        env['TEST_PORT'] = str(args.port)
+                        env['TEST_HOST'] = host
+                        env['TEST_PORT'] = str(port)
                         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
                         # Wait for server to be ready (try to connect)
-                        url = f'http://{args.host}:{args.port}/'
+                        url = f'http://{host}:{port}/'
                         ready = False
                         for i in range(20):
                             try:
@@ -232,17 +241,17 @@ if __name__ == '__main__':
                             server_started = True
                     except Exception as e:
                         print(f'  Exception starting configured command for {exercise}: {e}')
-        if args.host and args.port and ((args.lang == 'python' and python_solution) or (args.lang == 'perl' and perl_solution)):
+        if host and port and ((args.lang == 'python' and python_solution) or (args.lang == 'perl' and perl_solution)):
             env = os.environ.copy()
-            if args.host:
-                env['TEST_HOST'] = args.host
-            if args.port:
-                env['TEST_PORT'] = args.port
-            print(f'  Starting server for {exercise} at {args.host}:{args.port} ...')
+            if host:
+                env['TEST_HOST'] = host
+            if port:
+                env['TEST_PORT'] = port
+            print(f'  Starting server for {exercise} at {host}:{port} ...')
             if args.lang == 'python':
-                rc, proc, err = run_solution_python_server(python_solution, args.host, args.port, env=env)
+                rc, proc, err = run_solution_python_server(python_solution, host, port, env=env)
             elif args.lang == 'perl':
-                rc, proc, err = run_solution_perl_server(perl_solution, args.host, args.port, env=env)
+                rc, proc, err = run_solution_perl_server(perl_solution, host, port, env=env)
             if rc != 0:
                 print(f'  Failed to start server for {exercise}: {err}')
             else:
@@ -301,14 +310,14 @@ if __name__ == '__main__':
                     expected_json = fh.read()
 
                 total += 1
-                # Prepare environment
+                # Prepare environment (per-exercise host/port)
                 env = os.environ.copy()
-                if args.host:
-                    env['TEST_HOST'] = args.host
-                if args.port:
-                    env['TEST_PORT'] = args.port
+                if host:
+                    env['TEST_HOST'] = host
+                if port:
+                    env['TEST_PORT'] = port
                 if server_started:
-                    code, stdout, stderr = post_to_server(args.host, args.port, req_json)
+                    code, stdout, stderr = post_to_server(host, port, req_json)
                 else:
                     if args.lang == 'python':
                         code, stdout, stderr = run_solution_python(python_solution, req_json, env=env)
