@@ -22,7 +22,7 @@ description: "エクササイズとテストを生成する日本語エージェ
 
 出力要件（必須）:
 1. `exercises/<exercise_id>/problem.en.md` — 英語問題文（見出し、目的、入出力例）
-2. `exercises/<exercise_id>/problem.ja.md` — 日本語問題文（英語版と同等の情報）
+2. `exercises/<exercise_id>/problem.md` — 日本語問題文（英語版と同等の情報）
 3. `tests/<exercise_id>/request-0001.json` と `tests/<exercise_id>/expected-0001.json`（happy path）
 4. `tests/<exercise_id>/request-0002.json` と `tests/<exercise_id>/expected-0002.json`（edge case）
 5. `tests/<exercise_id>/request-0003.json` と `tests/<exercise_id>/expected-0003.json`（malicious/tricky）
