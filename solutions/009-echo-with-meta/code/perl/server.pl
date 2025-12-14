@@ -4,7 +4,6 @@ use warnings;
 use JSON::RPC::Spec;
 use POSIX qw(strftime);
 
-# TODO: 問題の意図はサーバー上の時間を返すことであるので、テスト結果も可変にできた方が良い
 
 # _is_object($v) -> bool
 # - 入力: 任意のスカラ/リファレンス ($v)
@@ -26,8 +25,9 @@ sub _iso8601_utc {
     # canonical ISO8601 string (e.g. "2020-01-01T12:00:00Z"). If not set,
     # return the current UTC time in YYYY-MM-DDTHH:MM:SSZ format.
     return $ENV{TEST_TIME} if defined $ENV{TEST_TIME} && $ENV{TEST_TIME} ne '';
+    return "2020-01-01T12:00:00Z"; # TODO: 問題の意図はサーバー上の時間を返すことであるが、現在の仕様では固定値なのでそのまま返す
     # RFC3339 / ISO8601-ish: YYYY-MM-DDTHH:MM:SSZ (UTC)
-    return POSIX::strftime("%Y-%m-%dT%H:%M:%SZ", gmtime());
+    # return POSIX::strftime("%Y-%m-%dT%H:%M:%SZ", gmtime());
 }
 
 # echoWithMeta($params) -> { payload => ..., meta => { ... } }

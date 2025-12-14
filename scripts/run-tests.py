@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('--all', action='store_true', dest='run_all', help='Run all exercises, overriding --exercises and CI changed-exercise filtering')
     parser.add_argument('--host', help='Optional host to set as TEST_HOST env var', default=None)
     parser.add_argument('--port', help='Optional port to set as TEST_PORT env var', default=None)
-    parser.add_argument('--lang', help='Language to use for solutions (default: python)', default='python')
+    parser.add_argument('--lang', help='Language to use for solutions (default: perl)', default='perl')
     args = parser.parse_args()
 
     if not os.path.isdir(TESTS_DIR):
