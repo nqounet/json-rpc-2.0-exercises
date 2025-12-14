@@ -196,7 +196,68 @@ CI (GitHub Actions):
 - GitHub Actions workflow は `.github/workflows/ci.yml` に定義されており、`push` / `pull_request`（main ブランチ）イベントで `scripts/run-tests.sh` を実行します。
  - GitHub Actions workflow は `.github/workflows/ci.yml` に定義されており、`push` / `pull_request`（main ブランチ）イベントで `scripts/run-tests.sh` を実行します。
  - CI は差分のある演習のみを検出し、変化のあった `exercises/*`・`solutions/*`・`tests/*` の変更に基づいて、対応する演習だけを実行するように最適化されています。
+
+### テスト実行のガイドライン（明確化）
+
+このプロジェクトでテストを実行するときに迷わないよう、よく使うコマンドと環境変数、期待される出力の意味を明確にまとめます。
+
+- 実行コマンド（推奨）
+  - 単一演習を実行する（例: 009 を Perl 実装で実行）:
+
+```bash
+./scripts/run-tests.sh --lang perl -e 009-echo-with-meta
 ```
+
+  - すべての演習を実行:
+
+```bash
+./scripts/run-tests.sh --lang perl
+```
+
+  - 直接 Python スクリプトを呼ぶ場合（実行権限がない/シェルの問題がある場合）:
+
+```bash
+python3 ./scripts/run-tests.py --exercises 009-echo-with-meta --lang perl
+```
+
+- 固定時刻が必要なテスト（タイムスタンプ）
+  - 一部の演習はサーバ側で生成される `timestamp` によって期待値が異なります。CI やローカルで determinisitic にテストするため、サーバ実装は `TEST_TIME` 環境変数を参照して固定時刻を返すようにすることを推奨します。
+  - 例（期待 fixture の timestamp に合わせる）:
+
+```bash
+TEST_TIME="2020-01-01T12:00:00Z" ./scripts/run-tests.sh --lang perl -e 009-echo-with-meta
+```
+
+- テスト時に利用される環境変数
+  - `TEST_HOST` / `TEST_PORT` : HTTP モードでソリューションを起動する際（`--http` をサポートする実装）に使用されます。runner はこれらを環境変数として渡します。
+  - `TEST_TIME` : 上述。オプションだが、タイムスタンプ固定が必要なテストでは必須にすることで差分を防げます。
+
+- 出力の読み方 / 期待される動作
+  - ランナーは各 fixture ごとに `OK` / `FAIL` を表示します。失敗した場合は期待値 (`expected`) と実際の出力 (`got`) を JSON で表示します。
+  - 標準エラーに出力がある場合、実装側でログや例外が発生しています。`STDERR` の内容を確認してください。
+  - 通知（notifications）: リクエストが通知（`id` を含まない）の場合、サーバは応答しないことが期待されます（出力は空）。ランナーは空出力を通知として扱います。
+
+- 終了コード
+  - 0 : すべてのテストが合格
+  - 2 : 1 件以上のテスト失敗（runner のデフォルト）
+  - その他 : 実行環境や依存関係の問題（例: スクリプトの起動失敗）
+
+- 欠損している実装の扱い
+  - 指定した言語のソリューションが存在しない場合、ランナーは該当テストを `MISSING-SOLUTION` としてレポートします。実装がない場合は `solutions/<exercise>/code/<language>/server.*` を追加してください。
+
+- よくあるトラブルシューティング
+  - `permission denied` エラー: スクリプトに実行権限がない場合があります。`chmod +x ./scripts/run-tests.sh` あるいは `python3 ./scripts/run-tests.py ...` で実行してください。
+  - Perl 実装でモジュールが見つからない: 例 `JSON::RPC::Spec` 等。CPAN または cpanminus でインストールしてください（例: `cpanm JSON::RPC::Spec` あるいは `cpan -i JSON::RPC::Spec`）。
+  - テストがタイムスタンプで失敗する: `TEST_TIME` を指定して再現性を持たせてください。
+
+- ヒント: ローカルでデバッグするとき
+  - 単一の request fixture を stdin から直接渡して実行結果を早く確認できます（Perl 実装の例）:
+
+```bash
+cat tests/009-echo-with-meta/request-0001.json | perl solutions/009-echo-with-meta/code/perl/server.pl
+```
+
+このガイドラインを守ることで、テストの実行・デバッグが安定して行えるはずです。
 
 ---
 

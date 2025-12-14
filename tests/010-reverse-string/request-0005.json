@@ -1,0 +1,1 @@
+[{"jsonrpc":"2.0","method":"reverse","params":["alpha"],"id":5},{"jsonrpc":"2.0","method":"reverse","params":["beta"]},{"foo":"bar"},{"jsonrpc":"2.0","method":"nonexistent","params":[],"id":6}]
