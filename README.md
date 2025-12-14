@@ -68,8 +68,7 @@ Note: Individual exercises may define their own numeric constraints or limits. F
 
 推奨フォーマット（テンプレート）:
 
-````markdown
-```markdown
+~~~markdown
 # <Exercise Number> — Short title
 
 Context:
@@ -93,9 +92,7 @@ Expected response:
 ```json
 { ... }
 ```
-
-```
-````
+~~~
 
 注意事項:
 - 見出しは上記と同等の意味であれば日本語/英語どちらでも構いませんが、CI やレビュワーが機械的に判別しやすいように英語版には必ず英語の見出し（`Requirements` / `Acceptance criteria` / `Difficulty`）を含めてください。
